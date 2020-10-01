@@ -26,7 +26,7 @@ pipeline {
         stage("Build") {
             steps {
                 echo "======== Executing go build in docker ========"
-                sh "docker --build-arg GOARCHARG=${GOARCH} GOOSARG=${GOOS} -t xen0077/golang-ci:${GOARCH}_${GOOS}  ."
+                sh "docker build  -t xen0077/golang-ci:${GOARCH}_${GOOS} --build-arg GOARCHARG=${GOARCH} GOOSARG=${GOOS} ."
             }
             post {
                 always {
