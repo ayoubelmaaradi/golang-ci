@@ -1,4 +1,4 @@
-FROM docker-registry.agilefabric.fr.carrefour.com/c4-platine/framework-go-platine:v1.13 AS golangfwk
+FROM golang AS golangfwk
 
 # Labels
 LABEL "GO version"="1.12.4"
