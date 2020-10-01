@@ -39,7 +39,7 @@ RUN version=1.11
 RUN env GOOS=$GOOSARG GOARCH=$GOARCHARG go build
 RUN ls -lrt /app
 RUN mkdir /app/artifacts
-RUN mv /app/GOcicd /app/artifacts
+RUN mv /app/app /app/artifacts
 #RUN go build -ldflags "-X main.vBuildTime=$timeNow -X main.vVersion=$version"
 #RUN cp $GOPATH/src/connInARabbitMQ/connInARabbitMQ /appli
 #RUN cp $GOPATH/src/connInARabbitMQ/*.json      /appli
