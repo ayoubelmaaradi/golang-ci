@@ -37,6 +37,7 @@ RUN version=1.11
 #RUN ls -ltr $GOPATH/src
 #RUN cd $GOPATH/src/connInARabbitMQ
 RUN env GOOS=$GOOSARG GOARCH=$GOARCHARG go build
+RUN ls -lrt /app
 RUN mkdir /app/artifacts
 RUN mv /app/GOcicd /app/artifacts
 #RUN go build -ldflags "-X main.vBuildTime=$timeNow -X main.vVersion=$version"
