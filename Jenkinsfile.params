@@ -1,0 +1,151 @@
+#!groovy
+pipeline {
+
+    agent {
+        label 'ci-slave-docker-02'
+    }
+     parameters {
+        string(name: 'typeMagParam', defaultValue: "Proxi", description: "Type de magasin, valeurs possibles 'Proxi', 'Hyper', 'Market' : ")
+        string(name: 'envMagParam', defaultValue: "PreProd", description: "Environnement d'installation, valeurs possibles 'PreProd', 'Prod' : ")
+    }
+    environment {
+
+        typeMag = "${params.typeMagParam.toLowerCase()}"
+        envMag  = "${params.envMagParam}"
+
+        buildFile = "${WORKSPACE}/socleMag/core/build/build.yaml"
+        def config = readYaml file: buildFile
+
+        // Application, Branche and version
+        rabbitmq_version         = "rabbitmq${config.version.app.rabbitMQ}"
+        erl_version              = "erl${config.version.app.erl}"
+
+        GIT_URL                  = "${config.git.url}"
+
+        // variable projet
+        repencours="${WORKSPACE}"
+        rabbitmq_erl_version="${rabbitmq_version}_${erl_version}"
+        repbasesrc="${repencours}/socleMag/core/commun/rabbitmq"
+        repbaseinstall="${repencours}/socleMag/core/${typeMag}"
+        archive_name="${typeMag}_rabbitmq"
+        repcible="${repencours}/socleMag/core/build/gen/${archive_name}"
+        repGen="${repencours}/socleMag/core/build/gen"
+        repzip="${repbasesrc}/7-Zip"
+        rep_dist="${repencours}/socleMag/core/build/dist/${archive_name}"
+        rep_livraison="${repencours}/generation/livrables"
+
+        versionfile = "${WORKSPACE}/socleMag/core/build/version.yaml"
+        def versiondata = readYaml file: versionfile
+
+        version = "${versiondata.version.major}.${versiondata.version.minor}"
+        zipCoreMagFile="socleMag/core/build/dist/${archive_name}/${archive_name}.${version}.exe"
+        zipCoreMagDist="socleMag/core/build/dist/core_${archive_name}.${version}.zip"
+
+    }
+
+    stages {
+
+        stage('Print infos') {
+            steps {
+                //sh 'echo ${params.typeMagParam}'
+                //sh 'echo ${params.envMagParam}'
+                sh 'echo $typeMag'
+                sh 'echo $envMag'
+            }
+        }
+
+        stage('Delete Gen Repository') {
+            steps {
+                sh 'rm -rf $repGen/*'
+                sh 'rm -rf $rep_dist/*'
+                sh 'rm -rf $zipCoreMagDist'
+            }
+        }
+
+        stage('Create destination folder') {
+            steps {
+                sh 'mkdir -p ${repcible}/securite'
+                sh 'mkdir -p ${repcible}/7-Zip'
+                sh 'mkdir -p ${repcible}/install'
+                sh 'mkdir -p ${repcible}/admin'
+                sh 'mkdir -p ${repcible}/logs'
+                sh 'mkdir -p ${repcible}/outils'
+                sh 'mkdir -p ${repcible}/rabbitmq_server'
+                sh 'mkdir -p $repencours/generation/livrables'
+                sh 'mkdir -p $repencours/generation/livrables/$typeMag'
+
+                sh 'mkdir -p ${repencours}/socleMag/core/build/dist'
+                sh 'mkdir -p ${repencours}/socleMag/core/build/dis/${archive_name}'
+            }
+        }
+
+        stage('copy package file') {
+            steps {
+
+                sh 'cp -rp $repbasesrc/admin/* $repcible/admin/'
+                sh 'cp -rp $repbasesrc/7-Zip/* $repcible/7-Zip'
+                sh 'cp -rp $repbasesrc/outils/* $repcible/outils/'
+                sh 'cp -rp $repbaseinstall/install/securite/$envMag/* $repcible/securite/'
+                sh 'cp -rp $repbasesrc/bin/$rabbitmq_erl_version/$rabbitmq_version/* $repcible/rabbitmq_server/'
+                sh 'cp -rp $repbasesrc/bin/$rabbitmq_erl_version/$erl_version $repcible/$erl_version/'
+                sh 'cp -rp $repbasesrc/rabbit01 $repcible/rabbit01/'
+                sh 'cp -rp $repbaseinstall/install/* $repcible/install/'
+                sh 'cp -rp $repbasesrc/dll $repcible/install/dll/'
+            }
+        }
+
+
+        stage('Build package') {
+            steps {
+                //sh 'cd $repcible/..'
+                sh 'echo $zipCoreMagFile'
+                sh 'rm -rf ${zipCoreMagFile}'
+                sh 'ls -ltrh $repGen'
+                script{
+                    zip zipFile: zipCoreMagFile, glob: '', archive: true, dir: "$repGen"
+                }
+                sh 'ls -ltr $rep_dist'
+                sh 'cd $repencours'
+                sh 'cp $repencours/socleMag/core/${typeMag}/install/InstallVlpRabbitG.cmd $rep_dist'
+                sh 'ls -ltrh $rep_dist'
+                 script{
+                    zip zipFile: zipCoreMagDist, glob: '', archive: true, dir: "$rep_dist"
+                }
+                sh 'ls -ltrh $rep_dist'
+                sh 'ls -ltr $zipCoreMagDist'
+                sh 'cp $zipCoreMagDist $rep_livraison/.'
+                sh 'ls -ltr $rep_livraison'
+            }
+        }
+
+
+        stage('Delete folder gen') {
+            steps {
+                sh 'rm -rf ${repcible}'
+                sh 'rm -rf ${rep_dist}'
+            }
+        }
+
+
+        stage('Commit package') {
+            steps {
+
+                script {
+                     // Commit changes
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "platine-jenkins-for-git",
+                        usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+
+                        sh 'git config remote.origin.url https://${USERNAME}:${PASSWORD}@${GIT_URL}'
+                        //sh 'git config user.email "fr_doit_mif@carrefour.com"'
+                        sh 'git config user.name "platine-jenkins-for-git"'
+                        sh "git add ${rep_livraison}/core_${archive_name}.${version}.zip"
+                        sh "git commit -m '- cd-pipeline : commit CoreMag zip file' "
+                        sh "git push origin HEAD:${env.BRANCH_NAME}"
+                        echo "continue : ${env.continuebuild}"
+                    }
+                }
+            }
+        }
+    }
+}
+
