@@ -4,10 +4,6 @@ pipeline {
         choice choices: ['windows', 'linux', 'darwin'], description: 'GO OS build', name: 'GOOS'
         choice choices: ['amd64', '386'], description: 'Platform ARCH', name: 'GOARCH'
     }
-
-    agent {
-        label "node"
-    }
     stages {
         stage("fetch from scm") {
             steps {
