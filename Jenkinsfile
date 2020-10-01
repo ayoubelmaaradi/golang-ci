@@ -36,7 +36,7 @@ pipeline {
                     echo "======== push to registry========"
                     withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB_CREDS_AYOUB', passwordVariable: 'docker_password', usernameVariable: 'docker_username')]) {
                         sh "docker login -u ${docker_username} -p ${docker_password}"
-                        sh "docker push xen0077/golang-ci:${GOOS}_${GOARCH}"
+                        sh "docker push xen0077/golang-ci:${GOARCH}_${GOOS}"
                     }
 
                 }
