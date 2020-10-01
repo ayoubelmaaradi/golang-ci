@@ -46,16 +46,16 @@ pipeline {
             }
         }
     }
-    post {
-        success {
-            echo "========pipeline executed successfully ========"
-            sh "docker run --name golang-ci-${GOOS}_${GOARCH} -v output:/app/golan-app xen0077/golang-ci:${GOOS}_${GOARCH}"
-            sh "sudo docker cp golang-ci:${GOOS}_${GOARCH}:/app/artifacts ."
-            sh "docker stop golang-ci-${GOOS}_${GOARCH}"
-            sh "docker rm golang-ci-${GOOS}_${GOARCH}"
-        }
-        failure {
-            echo "========pipeline execution failed========"
-        }
-    }
+//    post {
+//        success {
+//            echo "========pipeline executed successfully ========"
+//            sh "docker run --name golang-ci-${GOOS}_${GOARCH} -v output:/app/golan-app xen0077/golang-ci:${GOOS}_${GOARCH}"
+//            sh "sudo docker cp golang-ci:${GOOS}_${GOARCH}:/app/artifacts ."
+//            sh "docker stop golang-ci-${GOOS}_${GOARCH}"
+//            sh "docker rm golang-ci-${GOOS}_${GOARCH}"
+//        }
+//        failure {
+//            echo "========pipeline execution failed========"
+//        }
+//    }
 }
