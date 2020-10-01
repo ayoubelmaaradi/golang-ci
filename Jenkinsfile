@@ -1,6 +1,6 @@
 #!/usr/bin/groovy
 pipeline {
-    agent none
+    agent { label 'master' }
     parameters {
         choice choices: ['windows', 'linux', 'darwin'], description: 'GO OS build', name: 'GOOS'
         choice choices: ['amd64', '386'], description: 'Platform ARCH', name: 'GOARCH'
