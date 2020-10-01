@@ -1,5 +1,5 @@
+#FROM docker-registry.agilefabric.fr.carrefour.com/c4-platine/framework-go-platine:v1.13 AS golangfwk
 FROM golang AS golangfwk
-
 # Labels
 LABEL "GO version"="1.12.4"
 LABEL "Alpine version"="3.9"
@@ -37,6 +37,8 @@ RUN version=1.11
 #RUN ls -ltr $GOPATH/src
 #RUN cd $GOPATH/src/connInARabbitMQ
 RUN env GOOS=$GOOSARG GOARCH=$GOARCHARG go build
+RUN mkdir /app/artifacts
+RUN mv GOcicd /app/artifacts
 #RUN go build -ldflags "-X main.vBuildTime=$timeNow -X main.vVersion=$version"
 #RUN cp $GOPATH/src/connInARabbitMQ/connInARabbitMQ /appli
 #RUN cp $GOPATH/src/connInARabbitMQ/*.json      /appli
@@ -57,16 +59,16 @@ RUN apk add --no-cache curl
 #RUN cp /usr/share/zoneinfo/Europe/Paris /etc/localtime
 #RUN echo Europe/Paris > /etc/timezone
 #
-#RUN mkdir -p /appli
-COPY --from=golangfwk /app /appli
+RUN mkdir -p /artifacts
+COPY --from=golangfwk /app/artifacts /artifacts
 
 # Create a group and user
-RUN addgroup -g 30100 -S appflow && adduser --uid 30100 -S appflow -G appflow
-
-RUN chown -R appflow:appflow /appli
-
+#RUN addgroup -g 30100 -S appflow && adduser --uid 30100 -S appflow -G appflow
+#
+#RUN chown -R appflow:appflow /artifacts
+VOLUME /artifacts
 # user for process
-USER appflow
+#USER appflow
 
 # Start service
 #ENTRYPOINT /appli/connInARabbitMQ -p /appli/conf/connInARabbitMQParam.json
