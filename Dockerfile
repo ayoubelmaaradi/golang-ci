@@ -36,7 +36,7 @@ RUN version=1.11
 # Build and copy binaire to /appli
 #RUN ls -ltr $GOPATH/src
 #RUN cd $GOPATH/src/connInARabbitMQ
-RUN env GOOS=$GOOSARG GOARCH=$GOARCHARG go build /app -o /app/artifacts
+RUN env GOOS=$GOOSARG GOARCH=$GOARCHARG go build
 #RUN go build -ldflags "-X main.vBuildTime=$timeNow -X main.vVersion=$version"
 #RUN cp $GOPATH/src/connInARabbitMQ/connInARabbitMQ /appli
 #RUN cp $GOPATH/src/connInARabbitMQ/*.json      /appli
